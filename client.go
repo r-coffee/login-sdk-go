@@ -8,20 +8,24 @@ type Client struct {
 	EntityID string
 }
 
-func createClient(entityID string) *Client {
+// CreateClient : create a new login client
+func CreateClient(entityID string) *Client {
 	var c Client
 	c.EntityID = entityID
 	return &c
 }
 
-func (c *Client) register(id, password string) error {
+// Register : register a new user
+func (c *Client) Register(id, password string) error {
 	return register(c.EntityID, id, password, host)
 }
 
-func (c *Client) login(id, password string) (string, error) {
+// Login : log in user and get jwt
+func (c *Client) Login(id, password string) (string, error) {
 	return login(c.EntityID, id, password, host)
 }
 
-func (c *Client) validate(id, token string) error {
+// Validate : validate jwt token
+func (c *Client) Validate(id, token string) error {
 	return validate(c.EntityID, token, host)
 }
