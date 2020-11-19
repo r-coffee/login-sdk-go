@@ -1,4 +1,4 @@
-module login-sdk
+module github.com/r-coffee/login-sdk-go
 
 go 1.15
 
