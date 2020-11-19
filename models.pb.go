@@ -4,7 +4,7 @@
 // 	protoc        v3.13.0
 // source: models.proto
 
-package main
+package login
 
 import (
 	proto "github.com/golang/protobuf/proto"
