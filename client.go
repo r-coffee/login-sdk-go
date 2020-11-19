@@ -26,6 +26,6 @@ func (c *Client) Login(id, password string) (string, error) {
 }
 
 // Validate : validate jwt token
-func (c *Client) Validate(id, token string) error {
+func (c *Client) Validate(token string) error {
 	return validate(c.EntityID, token, host)
 }
