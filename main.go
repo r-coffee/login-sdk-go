@@ -40,9 +40,49 @@ func do(req, res interface{}, url string) error {
 	return nil
 }
 
+func doAuthRequired(req, res interface{}, url, token, entityID string) error {
+	// construct protobuf message
+	raw, err := proto.Marshal(req.(proto.Message))
+	if err != nil {
+		return err
+	}
+
+	// construct http request
+	client := &http.Client{}
+	reqq, err := http.NewRequest("POST", url, bytes.NewReader(raw))
+	reqq.Header.Add("Content-Type", "application/x-protobuf")
+	reqq.Header.Add("Authorization", "Bearer "+token)
+	reqq.Header.Add("EntityID", entityID)
+	resp, err := client.Do(reqq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// read response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// parse protobuf response
+	err = proto.Unmarshal(body, res.(proto.Message))
+	if err != nil {
+		return err
+	}
+
+	remoteErr := reflect.ValueOf(res).Elem().FieldByName("Error").String()
+
+	if len(remoteErr) > 0 {
+		return errors.New(remoteErr)
+	}
+
+	return nil
+}
+
 func register(e, i, p, h string) error {
 	var req RegisterRequest
-	var res RegisterResponse
+	var res GenericResponse
 
 	req.EntityID = e
 	req.Id = i
@@ -50,7 +90,7 @@ func register(e, i, p, h string) error {
 	return do(&req, &res, fmt.Sprintf("%s/v1/register", h))
 }
 
-func login(e, i, p, h string) (string, error) {
+func login(e, i, p, h string) (string, bool, error) {
 	var req LoginRequest
 	var res LoginResponse
 
@@ -60,18 +100,55 @@ func login(e, i, p, h string) (string, error) {
 
 	err := do(&req, &res, fmt.Sprintf("%s/v1/login", h))
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
-	return res.Token, nil
+	return res.Token, res.Admin, nil
 }
 
-func validate(e, t, h string) error {
+func validate(e, t, h string) (bool, error) {
 	var req ValidateRequest
 	var res ValidateResponse
 
 	req.EntityID = e
 	req.Token = t
 
-	return do(&req, &res, fmt.Sprintf("%s/v1/validate", h))
+	err := do(&req, &res, fmt.Sprintf("%s/v1/validate", h))
+	return res.Admin, err
+}
+
+func upgrade(e, t, h, u string) error {
+	var req GenericRequest
+	var res GenericResponse
+
+	req.UserID = u
+
+	return doAuthRequired(&req, &res, fmt.Sprintf("%s/v1/upgrade", h), t, e)
+}
+
+func downgrade(e, t, h, u string) error {
+	var req GenericRequest
+	var res GenericResponse
+
+	req.UserID = u
+
+	return doAuthRequired(&req, &res, fmt.Sprintf("%s/v1/downgrade", h), t, e)
+}
+
+func lock(e, t, h, u string) error {
+	var req GenericRequest
+	var res GenericResponse
+
+	req.UserID = u
+
+	return doAuthRequired(&req, &res, fmt.Sprintf("%s/v1/lock", h), t, e)
+}
+
+func unlock(e, t, h, u string) error {
+	var req GenericRequest
+	var res GenericResponse
+
+	req.UserID = u
+
+	return doAuthRequired(&req, &res, fmt.Sprintf("%s/v1/unlock", h), t, e)
 }
