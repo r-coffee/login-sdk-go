@@ -28,7 +28,7 @@ func do(req, res interface{}, url string) error {
 
 	err = proto.Unmarshal(body, res.(proto.Message))
 	if err != nil {
-		return err
+		return errors.New(string(body))
 	}
 
 	remoteErr := reflect.ValueOf(res).Elem().FieldByName("Error").String()
@@ -50,6 +50,9 @@ func doAuthRequired(req, res interface{}, url, token, entityID string) error {
 	// construct http request
 	client := &http.Client{}
 	reqq, err := http.NewRequest("POST", url, bytes.NewReader(raw))
+	if err != nil {
+		return err
+	}
 	reqq.Header.Add("Content-Type", "application/x-protobuf")
 	reqq.Header.Add("Authorization", "Bearer "+token)
 	reqq.Header.Add("EntityID", entityID)

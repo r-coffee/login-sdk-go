@@ -47,5 +47,5 @@ func (c *Client) Lock(token, userID string) error {
 
 // Unlock : unlocks a user
 func (c *Client) Unlock(token, userID string) error {
-	return upgrade(c.EntityID, token, host, userID)
+	return unlock(c.EntityID, token, host, userID)
 }
