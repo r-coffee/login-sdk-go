@@ -68,7 +68,7 @@ func doAuthRequired(req, res interface{}, url, token, entityID string) error {
 	// parse protobuf response
 	err = proto.Unmarshal(body, res.(proto.Message))
 	if err != nil {
-		return err
+		return errors.New(string(body))
 	}
 
 	remoteErr := reflect.ValueOf(res).Elem().FieldByName("Error").String()
