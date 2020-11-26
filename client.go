@@ -25,8 +25,8 @@ func (c *Client) Login(id, password string) (string, bool, error) {
 	return login(c.EntityID, id, password, host)
 }
 
-// Validate : validate jwt token. returns Admin status
-func (c *Client) Validate(token string) (bool, error) {
+// Validate : validate jwt token. returns Admin status and site
+func (c *Client) Validate(token string) (bool, string, error) {
 	return validate(c.EntityID, token, host)
 }
 
