@@ -79,10 +79,14 @@ func TestLoginLocked(t *testing.T) {
 func TestValidate(t *testing.T) {
 	client := CreateClient(eid)
 	token, _, _ := client.Login(id, pass)
-	admin, site, err := client.Validate(token)
+	admin, site, entityID, err := client.Validate(token)
 
 	if admin {
 		t.Error("expected normal user")
+	}
+
+	if id != entityID {
+		t.Errorf("got %s expected %s", entityID, id)
 	}
 
 	if err != nil {
@@ -96,7 +100,7 @@ func TestValidate(t *testing.T) {
 
 func TestValidateBadToken(t *testing.T) {
 	client := CreateClient(eid)
-	_, _, err := client.Validate("invalid")
+	_, _, _, err := client.Validate("invalid")
 
 	if err == nil || err.Error() != "invalid token" {
 		t.Errorf("expected differnt error: %v", err)
@@ -110,7 +114,7 @@ func TestValidateLockedUser(t *testing.T) {
 	token, _, _ := client.Login(id, pass)
 	client.Lock(tokenAdmin, id)
 
-	_, _, err := client.Validate(token)
+	_, _, _, err := client.Validate(token)
 	if err == nil || err.Error() != "user account locked" {
 		t.Errorf("expected differnt error: %v", err)
 	}

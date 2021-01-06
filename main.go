@@ -109,7 +109,7 @@ func login(e, i, p, h string) (string, bool, error) {
 	return res.Token, res.Admin, nil
 }
 
-func validate(e, t, h string) (bool, string, error) {
+func validate(e, t, h string) (bool, string, string, error) {
 	var req ValidateRequest
 	var res ValidateResponse
 
@@ -117,7 +117,7 @@ func validate(e, t, h string) (bool, string, error) {
 	req.Token = t
 
 	err := do(&req, &res, fmt.Sprintf("%s/v1/validate", h))
-	return res.Admin, res.Site, err
+	return res.Admin, res.Site, res.Id, err
 }
 
 func upgrade(e, t, h, u string) error {
