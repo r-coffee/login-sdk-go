@@ -2,15 +2,12 @@ package login
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
-	status "google.golang.org/grpc/status"
 )
 
 type LoginClient struct {
@@ -38,19 +35,42 @@ func CreateLoginClient(host, entity, pathToCert string, port int) *LoginClient {
 }
 
 // Register a new user
+// returns a jwt token and error
 func (s *LoginClient) Register(email, password string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	resp, err := s.stub.Register(ctx, &RegisterRequest{Entity: s.entity, Email: email, Password: password})
-	if err != nil {
-		s := status.Convert(err)
-		if s.Code() == codes.NotFound {
-			return "", errors.New("entity no found")
-		}
-	}
 	if resp != nil {
 		return resp.GetToken(), err
+	}
+
+	return "", err
+}
+
+// Login a user
+// returns a jwt token and error
+func (s *LoginClient) Login(email, password string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := s.stub.Login(ctx, &LoginRequest{Entity: s.entity, Email: email, Password: password})
+	if resp != nil {
+		return resp.GetToken(), err
+	}
+
+	return "", err
+}
+
+// Validate a jwt token
+// returns email and error
+func (s *LoginClient) Validate(token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := s.stub.Validate(ctx, &ValidateRequest{Entity: s.entity, Token: token})
+	if resp != nil {
+		return resp.GetEmail(), err
 	}
 
 	return "", err
