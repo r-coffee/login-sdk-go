@@ -1,51 +1,57 @@
 package login
 
-// host cannot end with /
-const host = "https://login-service-296122.uc.r.appspot.com"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"time"
 
-// Client :
-type Client struct {
-	EntityID string
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	status "google.golang.org/grpc/status"
+)
+
+type LoginClient struct {
+	stub   LoginServiceClient
+	entity string
 }
 
-// CreateClient : create a new login client
-func CreateClient(entityID string) *Client {
-	var c Client
-	c.EntityID = entityID
-	return &c
+// CreateLoginClient creates a new login client
+func CreateLoginClient(host, entity, pathToCert string, port int) *LoginClient {
+	var sdk LoginClient
+	creds, err := credentials.NewClientTLSFromFile(pathToCert, host)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// connection timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:%d", host, port), grpc.WithTransportCredentials(creds), grpc.WithBlock())
+	if err != nil {
+		log.Fatal(err)
+	}
+	sdk.stub = NewLoginServiceClient(conn)
+	sdk.entity = entity
+	return &sdk
 }
 
-// Register : register a new user
-func (c *Client) Register(id, password string) error {
-	return register(c.EntityID, id, password, host)
-}
+// Register a new user
+func (s *LoginClient) Register(email, password string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-// Login : log in user and return jwt token and Admin status
-func (c *Client) Login(id, password string) (string, bool, error) {
-	return login(c.EntityID, id, password, host)
-}
+	resp, err := s.stub.Register(ctx, &RegisterRequest{Entity: s.entity, Email: email, Password: password})
+	if err != nil {
+		s := status.Convert(err)
+		if s.Code() == codes.NotFound {
+			return "", errors.New("entity no found")
+		}
+	}
+	if resp != nil {
+		return resp.GetToken(), err
+	}
 
-// Validate : validate jwt token. returns Admin status, site, entity_id
-func (c *Client) Validate(token string) (bool, string, string, error) {
-	return validate(c.EntityID, token, host)
-}
-
-// Upgrade : upgrade user to Admin
-func (c *Client) Upgrade(token, userID string) error {
-	return upgrade(c.EntityID, token, host, userID)
-}
-
-// Downgrade : downgrade user (remove Admin rights)
-func (c *Client) Downgrade(token, userID string) error {
-	return downgrade(c.EntityID, token, host, userID)
-}
-
-// Lock : locks user. user cannot login or validate a token
-func (c *Client) Lock(token, userID string) error {
-	return lock(c.EntityID, token, host, userID)
-}
-
-// Unlock : unlocks a user
-func (c *Client) Unlock(token, userID string) error {
-	return unlock(c.EntityID, token, host, userID)
+	return "", err
 }

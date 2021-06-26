@@ -1,9 +1,5 @@
 package login
 
-import (
-	"testing"
-)
-
 const (
 	eid       = "Eg4KBmVudGl0eRoER29vZA"
 	id        = "foo"
@@ -11,7 +7,7 @@ const (
 	adminPass = "}V[=jJyQnkmN63hRBHRq"
 )
 
-func TestRegister(t *testing.T) {
+/*func TestRegister(t *testing.T) {
 	client := CreateClient(eid)
 	err := client.Register(id, pass)
 	if err != nil {
@@ -142,4 +138,4 @@ func TestUpgrade(t *testing.T) {
 	}
 
 	client.Downgrade(tokenAdmin, id)
-}
+}*/
