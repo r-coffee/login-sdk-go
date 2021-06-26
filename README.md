@@ -11,29 +11,33 @@ import (
 	login "github.com/r-coffee/login-sdk-go"
 )
 
-func main() {
-	// create a new login client with a valid entity id
-	client := login.CreateClient("Eg4KBmVudGl0eRoEVEVTVA")
+func testSDK() {
+	client := login.CreateLoginClient("hostname.com", "my-entity-guid", "/path/to/cert.pem", 8888)
 
 	// test register
-	err := client.Register("foo", "password")
+	token, err := client.Register("email@example.com", "password")
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println(token)
 
 	// test login
-	token, err := client.Login("foo", "password")
+	token, err = client.Login("email@example.com", "password")
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(token)
 
 	// test validate
-	err = client.Validate(token)
+	email, err := client.Validate(token)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("done")
+	fmt.Println(email)
 }
+
+func main() {
+	testSDK()
+}
+
 ```
