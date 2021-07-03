@@ -6,12 +6,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/r-coffee/login-sdk-go/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 type LoginClient struct {
-	stub   LoginServiceClient
+	stub   proto.LoginServiceClient
 	entity string
 }
 
@@ -29,7 +30,7 @@ func CreateLoginClient(host, entity, pathToCert string, port int) *LoginClient {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sdk.stub = NewLoginServiceClient(conn)
+	sdk.stub = proto.NewLoginServiceClient(conn)
 	sdk.entity = entity
 	return &sdk
 }
@@ -40,7 +41,7 @@ func (s *LoginClient) Register(email, password string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	resp, err := s.stub.Register(ctx, &RegisterRequest{Entity: s.entity, Email: email, Password: password})
+	resp, err := s.stub.Register(ctx, &proto.RegisterRequest{Entity: s.entity, Email: email, Password: password})
 	if resp != nil {
 		return resp.GetToken(), err
 	}
@@ -54,7 +55,7 @@ func (s *LoginClient) Login(email, password string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	resp, err := s.stub.Login(ctx, &LoginRequest{Entity: s.entity, Email: email, Password: password})
+	resp, err := s.stub.Login(ctx, &proto.LoginRequest{Entity: s.entity, Email: email, Password: password})
 	if resp != nil {
 		return resp.GetToken(), err
 	}
@@ -68,7 +69,7 @@ func (s *LoginClient) Validate(token string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	resp, err := s.stub.Validate(ctx, &ValidateRequest{Entity: s.entity, Token: token})
+	resp, err := s.stub.Validate(ctx, &proto.ValidateRequest{Entity: s.entity, Token: token})
 	if resp != nil {
 		return resp.GetEmail(), err
 	}
