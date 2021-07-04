@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+const (
+	connectTimeout = 5 * time.Second
+	requestTimeout = 3 * time.Second
+)
+
 type LoginClient struct {
 	stub   proto.LoginServiceClient
 	entity string
@@ -24,7 +29,7 @@ func CreateLoginClient(host, entity, pathToCert string, port int) *LoginClient {
 		log.Fatal(err)
 	}
 	// connection timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), connectTimeout)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:%d", host, port), grpc.WithTransportCredentials(creds), grpc.WithBlock())
 	if err != nil {
@@ -38,7 +43,7 @@ func CreateLoginClient(host, entity, pathToCert string, port int) *LoginClient {
 // Register a new user
 // returns a jwt token and error
 func (s *LoginClient) Register(email, password string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	resp, err := s.stub.Register(ctx, &proto.RegisterRequest{Entity: s.entity, Email: email, Password: password})
@@ -52,7 +57,7 @@ func (s *LoginClient) Register(email, password string) (string, error) {
 // Login a user
 // returns a jwt token and error
 func (s *LoginClient) Login(email, password string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	resp, err := s.stub.Login(ctx, &proto.LoginRequest{Entity: s.entity, Email: email, Password: password})
@@ -66,7 +71,7 @@ func (s *LoginClient) Login(email, password string) (string, error) {
 // Validate a jwt token
 // returns email and error
 func (s *LoginClient) Validate(token string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	resp, err := s.stub.Validate(ctx, &proto.ValidateRequest{Entity: s.entity, Token: token})
@@ -75,4 +80,19 @@ func (s *LoginClient) Validate(token string) (string, error) {
 	}
 
 	return "", err
+}
+
+// List all entities
+func (s *LoginClient) List() ([]*proto.EntityTuple, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	var dat []*proto.EntityTuple
+
+	resp, err := s.stub.List(ctx, &proto.ListRequest{})
+	if resp != nil {
+		return dat, err
+	}
+
+	return resp.Entities, err
 }
