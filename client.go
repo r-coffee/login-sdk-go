@@ -87,12 +87,10 @@ func (s *LoginClient) List() ([]*proto.EntityTuple, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
-	var dat []*proto.EntityTuple
-
 	resp, err := s.stub.List(ctx, &proto.ListRequest{})
 	if resp != nil {
-		return dat, err
+		return resp.Entities, err
 	}
 
-	return resp.Entities, err
+	return []*proto.EntityTuple{}, err
 }
