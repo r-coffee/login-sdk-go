@@ -94,3 +94,12 @@ func (s *LoginClient) List() ([]*proto.EntityTuple, error) {
 
 	return []*proto.EntityTuple{}, err
 }
+
+// Remove an entity
+func (s *LoginClient) Remove(guid string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	_, err := s.stub.Remove(ctx, &proto.RemoveRequest{Guid: guid})
+	return err
+}
