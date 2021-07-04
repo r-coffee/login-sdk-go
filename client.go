@@ -103,3 +103,15 @@ func (s *LoginClient) Remove(guid string) error {
 	_, err := s.stub.Remove(ctx, &proto.RemoveRequest{Guid: guid})
 	return err
 }
+
+// Create an enity
+func (s *LoginClient) Create(name, token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	res, err := s.stub.CreateEntity(ctx, &proto.CreateEntityRequest{Name: name, Token: token})
+	if res != nil {
+		return res.GetGuid(), err
+	}
+	return "", err
+}
